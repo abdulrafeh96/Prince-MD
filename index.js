@@ -1,47 +1,34 @@
-// ============================================
-//         Prince Md — INDEX.JS
-//         Main Entry Point
-//         Developer: Abdul Rafeh
-// ============================================
-
 'use strict';
 
-const fs         = require('fs');        // Built-in — no install needed
-const path       = require('path');      // Built-in — no install needed
-const config     = require('./config/config');
-const logger     = require('./utils/logger');
+const fs     = require('fs');
+const config = require('./config/config');
+const logger = require('./utils/logger');
 
-// ===== MESSAGE PARSING =====
-
-// ─── Print Banner ─────────────────────────────
 logger.banner();
 
-// ─── Ensure Required Directories Exist ───────
 const dirs = ['./sessions', './database', './assets', './logs'];
-dirs.forEach(dir => {
+dirs.forEach((dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 });
 logger.info('Directories verified.');
 
-// ─── Anti-Crash Handler ───────────────────────
 process.on('uncaughtException', (err) => {
   logger.error('Uncaught Exception:', err.message);
 });
+
 process.on('unhandledRejection', (reason) => {
   logger.error('Unhandled Rejection:', reason?.message || reason);
 });
 logger.info('Anti-crash handler enabled.');
 
-// ─── Validate Telegram Token ──────────────────
 if (!config.telegram.token || config.telegram.token === 'YOUR_TELEGRAM_BOT_TOKEN_HERE') {
-  logger.error('❌ Telegram bot token not set!');
-  logger.error('   Open config/config.js and set your token.');
+  logger.error('Telegram bot token not set!');
+  logger.error('Open config/config.js and set your token.');
   process.exit(1);
 }
 
-// ─── Start Telegram Bot ───────────────────────
 let telegramBot;
 try {
   const TelegramBot = require('node-telegram-bot-api');
@@ -49,8 +36,8 @@ try {
     polling: {
       autoStart: true,
       interval: 3000,
-      params: { timeout: 60 }
-    }
+      params: { timeout: 60 },
+    },
   });
   logger.success('Telegram bot started successfully!');
 } catch (err) {
@@ -59,7 +46,6 @@ try {
   telegramBot = null;
 }
 
-// ─── Load Telegram Handlers ───────────────────
 if (telegramBot) {
   try {
     const { initTelegram } = require('./telegram/bot');
@@ -72,7 +58,6 @@ if (telegramBot) {
   }
 }
 
-// ─── Restore Saved WhatsApp Sessions ─────────
 const { restoreAllSessions } = require('./core/whatsapp');
 (async () => {
   try {
@@ -83,18 +68,17 @@ const { restoreAllSessions } = require('./core/whatsapp');
   }
 })();
 
-// ─── Express Keep-Alive Server ────────────────
 try {
   const express = require('express');
-  const app     = express();
+  const app = express();
 
   app.get('/', (req, res) => {
     res.json({
-      bot:       'Prince Md',
+      bot: 'Prince Md',
       developer: 'Abdul Rafeh',
-      version:   config.version,
-      status:    'running',
-      uptime:    Math.floor(process.uptime()) + 's',
+      version: config.version,
+      status: 'running',
+      uptime: Math.floor(process.uptime()) + 's',
     });
   });
 
@@ -121,8 +105,14 @@ try {
   logger.warn('Express server not started:', err.message);
 }
 
-// ─── Graceful Shutdown ────────────────────────
-process.on('SIGINT', () => { logger.warn('Shutting down...'); process.exit(0); });
-process.on('SIGTERM', () => { logger.warn('Shutting down...'); process.exit(0); });
+process.on('SIGINT', () => {
+  logger.warn('Shutting down...');
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  logger.warn('Shutting down...');
+  process.exit(0);
+});
 
 logger.success('Prince Md is fully initialized and running!');

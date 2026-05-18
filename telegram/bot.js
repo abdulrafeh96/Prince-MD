@@ -167,6 +167,15 @@ const initTelegram = (bot) => {
     const message = err?.message || '';
     const code = err?.code || err?.name || '';
 
+    if (/409|ETELEGRAM.*Conflict|terminated by other getUpdates request/i.test(message) || /409/i.test(code)) {
+      try {
+        await bot.stopPolling();
+      } catch (stopErr) {
+        // Ignore duplicate polling stop errors to keep console clean.
+      }
+      return;
+    }
+
     // Network glitches are common in long-polling; keep bot alive and log softly.
     if (
       /ETIMEDOUT|ECONNRESET|EAI_AGAIN|EFATAL|429/i.test(message) ||

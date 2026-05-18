@@ -56,7 +56,18 @@ const aiimageCmd = require('../commands/aiimage');
 const aiExtrasCmd = require('../commands/aiExtras');
 const otpCmd = require('../commands/otp');
 const videoDownloadCmd = require('../commands/videoDownload');
-const gdriveCmd = require('../commands/gdrive');
+
+const safeText = (value) => {
+  if (value === null || value === undefined) return '';
+  return String(value).trim();
+};
+
+const sendSafeText = async (sock, jid, text, opts) => {
+  const cleanText = safeText(text);
+  if (!cleanText) return false;
+  await sock.sendMessage(jid, { text: cleanText }, opts);
+  return true;
+};
 
 // ID Tracking: Ab har bot ki alag tracking hogi
 const botProcessedIds = new Map(); 
@@ -238,12 +249,6 @@ const handleMessage = async (sock, m, botNum) => {
   const lockedChatHandled = await lockchatCmd.checkLockedChat(sock, msg, from, sender, botNum, protectedSender).catch(() => false);
   if (lockedChatHandled) return;
 
-  // GDrive material requests must work before prefix/command/private-mode gates.
-  const autoDriveHandled = await gdriveCmd.handleAutoDrive({
-    sock, msg, from, sender, isGroup, body, botNum, cleanBotNum, type,
-  }).catch(() => false);
-  if (autoDriveHandled) return;
-
   if (isGroup) {
     const antiStickerHandled = await checkAntiSticker(sock, msg, from, sender, botNum, finalIsOwner, senderIsGroupAdmin).catch(() => false);
     if (antiStickerHandled) return;
@@ -274,7 +279,9 @@ const handleMessage = async (sock, m, botNum) => {
       await checkAntiLink(sock, msg, from, sender, body, botNum, protectedSender).catch(() => {});
       await checkAntiKeyword(sock, msg, from, sender, body, botNum, protectedSender).catch(() => {});
     }
-        await handleChatbot(sock, msg, from, sender, body, botNum, isGroup, finalIsOwner).catch(() => {});
+    if (body.trim()) {
+      await handleChatbot(sock, msg, from, sender, body, botNum, isGroup, finalIsOwner).catch(() => {});
+    }
     return;
   }
 
@@ -282,23 +289,18 @@ const handleMessage = async (sock, m, botNum) => {
     
   const args    = body.slice(config.prefix.length).trim().split(/\s+/);
   const command = args.shift()?.toLowerCase();
-  if (!command) {
-    // Check for video selection replies
-    const videoSelectionHandled = await videoDownloadCmd.handleVideoSelection(ctx);
-    if (videoSelectionHandled) return;
-    return;
-  }
+  if (!command) return;
 
   const isGroupAdminCommand = GROUP_ADMIN_COMMANDS.has(command);
 
   if (isGroupAdminCommand) {
     if (!isGroup) {
-      return sock.sendMessage(from, { text: 'This command can only be used in groups.' }, { quoted: msg });
+      return sendSafeText(sock, from, 'This command can only be used in groups.', { quoted: msg });
     }
 
     senderIsGroupAdmin = await isGroupAdmin(sock, from, sender).catch(() => false);
     if (!senderIsGroupAdmin) {
-      return sock.sendMessage(from, { text: 'Only group admins can use this command.' }, { quoted: msg });
+      return sendSafeText(sock, from, 'Only group admins can use this command.', { quoted: msg });
     }
   }
 
@@ -312,7 +314,7 @@ const handleMessage = async (sock, m, botNum) => {
   const ctx = {
     sock, msg, from, sender, senderDigits,
     isGroup, isOwner: finalIsOwner, body, botNum, cleanBotNum, type, args,
-    reply: (text, opts) => sock.sendMessage(from, { text }, isGroup ? { quoted: msg, ...opts } : { ...opts }),
+    reply: (text, opts) => sendSafeText(sock, from, text, isGroup ? { quoted: msg, ...opts } : { ...opts }),
     react: (emoji) => sock.sendMessage(from, { react: { text: emoji, key: msg.key } }),
   };
 
@@ -453,11 +455,6 @@ const handleMessage = async (sock, m, botNum) => {
       case 'iptracker': case 'iptrack': await iptrackerCmd.iptracker(ctx); break;
       case 'otp': await otpCmd.otp(ctx); break;
       case 'otpstatus': await otpCmd.otpstatus(ctx); break;
-      case 'handouts': case 'handout': await gdriveCmd.handouts(ctx); break;
-      case 'termfiles': case 'termfile': await gdriveCmd.termfiles(ctx); break;
-      case 'papers': case 'paper': case 'pastpapers': case 'pastpaper': await gdriveCmd.papers(ctx); break;
-      case 'midterm': await gdriveCmd.termfiles({ ...ctx, args: ['mid', ...args] }); break;
-      case 'finalterm': await gdriveCmd.termfiles({ ...ctx, args: ['final', ...args] }); break;
       case 'setcmd': await setStickerCommand(sock, msg, args); break;
       case 'getcmd': await getStickerCommand(sock, msg, args); break;
       case 'delcmd': await deleteStickerCommand(sock, msg, args); break;

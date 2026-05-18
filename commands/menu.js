@@ -127,15 +127,6 @@ const run = async (ctx) => {
 ┃ ❍ .${toSmallCaps('pindl')}
 ┃ ❍ .${toSmallCaps('pinterestdl')}
 ┗━━━━━━━━━━━━┛
-
-
-*┏━━〔 📚 𝐄𝐃𝐔𝐂𝐀𝐓𝐈𝐎𝐍 〕*
-┃ ❍ *${toSmallCaps('handouts')}* (No prefix needed)
-┃ ❍ *${toSmallCaps('pastpapers')}* - ${toSmallCaps('cs101 midterm papers')} (No prefix needed)
-┃ ❍ *${toSmallCaps('midterm')}* (No prefix needed)
-┃ ❍ *${toSmallCaps('finalterm')}* (No prefix needed)
-┗━━━━━━━━━━━━┛
-
 *┏━━〔 ⚙️ 𝐔𝐓𝐈𝐋𝐈𝐓𝐘 〕*
 ┃ ❍ .${toSmallCaps('weather')}
 ┃ ❍ .${toSmallCaps('translate')}

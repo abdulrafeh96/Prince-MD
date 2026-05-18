@@ -61,7 +61,6 @@ npm install --legacy-peer-deps
 
 ```bash
 node --check index.js
-node --check commands/gdrive.js
 node --check handlers/groupHandler.js
 node --check utils/autoScheduler.js
 ```
