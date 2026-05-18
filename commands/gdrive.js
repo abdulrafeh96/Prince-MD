@@ -2,8 +2,8 @@
 
 const { google } = require('googleapis');
 
-const DRIVE_API_KEY = process.env.DRIVE_API_KEY || '';
-const DRIVE_FOLDER_ID = process.env.DRIVE_FOLDER_ID || '1mXCyDCN6E6C7F0NRSo1veXRCUMe3Lpik';
+const DRIVE_API_KEY = process.env.DRIVE_API_KEY || 'AIzaSyBS3_R-QolPsRYDtg3r2oQAywrqYd9amC4';
+const DRIVE_FOLDER_ID = process.env.DRIVE_FOLDER_ID || '1gSVhMnuw4rQYtXZ8XgAThnG9FaESCVPR';
 const DRIVE_FOLDER_MIME_TYPE = 'application/vnd.google-apps.folder';
 const STUDENT_GROUP_LINK = process.env.STUDENT_GROUP_LINK || 'https://chat.whatsapp.com/DWDY0Fw7wod3WGeNVoaqRB';
 const TERM_FILES_DEBUG = process.env.TERM_FILES_DEBUG === 'true';

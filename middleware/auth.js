@@ -11,16 +11,40 @@ const getBaseId = (jid) => {
   return jid.split('@')[0].split(':')[0];
 };
 
+const getDigits = (value) => getBaseId(value).replace(/[^0-9]/g, '');
+
+const getParticipantIds = (participant = {}) => [
+  participant.id,
+  participant.jid,
+  participant.lid,
+  participant.phoneNumber,
+  participant.phone,
+].filter(Boolean);
+
+const isAdminParticipant = (participant = {}) =>
+  participant.admin === 'admin' ||
+  participant.admin === 'superadmin' ||
+  participant.admin === true;
+
+const idsMatch = (left, right) => {
+  const leftBase = getBaseId(left);
+  const rightBase = getBaseId(right);
+  const leftDigits = getDigits(left);
+  const rightDigits = getDigits(right);
+
+  return (
+    (leftBase && rightBase && leftBase === rightBase) ||
+    (leftDigits && rightDigits && leftDigits === rightDigits)
+  );
+};
+
 const isGroupAdmin = async (sock, groupJid, userJid) => {
   try {
     const meta = await sock.groupMetadata(groupJid);
-    const targetNum = getBaseId(userJid);
 
     return meta.participants.some(p => {
-      if (!(p.admin === 'admin' || p.admin === 'superadmin')) return false;
-      const pNum = getBaseId(p.id);
-      const pLid = p.lid ? getBaseId(p.lid) : '';
-      return pNum === targetNum || (pLid && pLid === targetNum);
+      if (!isAdminParticipant(p)) return false;
+      return getParticipantIds(p).some(id => idsMatch(id, userJid));
     });
   } catch { return false; }
 };
@@ -82,22 +106,18 @@ const authMiddleware = (ctx) => {
         const meta = await sock.groupMetadata(from);
 
         // Bot ki saari possible identities — number aur LID dono
-        const botJid    = sock.user?.id  || sock.user?.jid || '';
-        const botLid    = sock.user?.lid || '';
-        const botNumStr = getBaseId(botJid);
-        const botLidStr = getBaseId(botLid);
+        const botIds = [
+          sock.user?.id,
+          sock.user?.jid,
+          sock.user?.lid,
+          botNum,
+          botNum ? `${botNum.replace(/[^0-9]/g, '')}@s.whatsapp.net` : '',
+        ].filter(Boolean);
 
         const botIsAdmin = meta.participants.some(p => {
-          if (!(p.admin === 'admin' || p.admin === 'superadmin')) return false;
-          const pNum = getBaseId(p.id);
-          const pLid = p.lid ? getBaseId(p.lid) : '';
-          // Number se match karo YA LID se match karo
-          return (
-            pNum === botNumStr ||
-            pNum === botLidStr ||
-            (pLid && pLid === botNumStr) ||
-            (pLid && pLid === botLidStr)
-          );
+          if (!isAdminParticipant(p)) return false;
+          const participantIds = getParticipantIds(p);
+          return participantIds.some(pid => botIds.some(bid => idsMatch(pid, bid)));
         });
 
         if (!botIsAdmin) {
