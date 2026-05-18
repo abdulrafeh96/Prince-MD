@@ -3,7 +3,7 @@ REM upload-working.cmd
 REM Usage: upload-working.cmd [commit message]
 
 SETLOCAL ENABLEDELAYEDEXPANSION
-SET REPO_URL=https://github.com/abdulrafeh96/Prince-MD.git
+SET REPO_URL=https://github.com/abdulrafeh96/PRINCE-BOT.git
 SET COMMIT_MESSAGE=%~1
 IF "%COMMIT_MESSAGE%"=="" SET COMMIT_MESSAGE=Upload bot
 

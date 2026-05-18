@@ -149,31 +149,23 @@ function studentGroupFooter() {
   return `\n\nSupport us by joining this group:\n${STUDENT_GROUP_LINK}`;
 }
 
-function poweredByEddyFooter() {
-  return [
-    '',
-    'â”â”â”ã€” *Powered by EDDY* ã€•â”â”â”“',
-    'â”ƒ  Smart files, fast delivery',
-    'â”—â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”›',
-  ].join('\n');
-}
-
-function withPoweredCaption(caption) {
-  return caption || 'FILE';
+function cleanDriveCaption() {
+  return '';
 }
 
 function missingTermText(subject, termType) {
   const termName = termType === 'mid' ? 'Mid Term' : 'Final Term';
   return [
-    'â”â”â”ã€” *EDDY File Status* ã€•â”â”â”“',
+    '╭─── *FILE STATUS* ───╮',
     '',
-    'â³ *Status:* Not Available',
-    `ðŸ“š *Type:* ${termName} Files`,
-    `ðŸŽ¯ *Subject:* ${subject}`,
+    '✦ *Status*   : Not Available',
+    `✦ *Type*     : ${termName} Files`,
+    `✦ *Subject*  : ${subject}`,
     '',
-    'â”ƒ File halay upload nahi hoyi, paaji.',
-    'â”ƒ Thora sabar karo, jaldi add ho jaye gi.',
-    'â”—â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”›',
+    'File abhi Drive mein upload nahi hui.',
+    'Jaldi add ho jaye gi, thora sabar karo.',
+    '',
+    '╰────────────────────╯',
     studentGroupFooter().trimStart(),
   ].join('\n');
 }
@@ -181,30 +173,32 @@ function missingTermText(subject, termType) {
 function missingPaperText(subject, termType) {
   const termName = termType === 'mid' ? 'Mid Term' : 'Final Term';
   return [
-    'Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ£â‚¬â€ *EDDY File Status* Ã£â‚¬â€¢Ã¢â€ÂÃ¢â€ÂÃ¢â€â€œ',
+    '╭─── *FILE STATUS* ───╮',
     '',
-    'Ã¢ÂÂ³ *Status:* Not Available',
-    `Ã°Å¸â€œÅ¡ *Type:* ${termName} Past Papers`,
-    `Ã°Å¸Å½Â¯ *Subject:* ${subject}`,
+    '✦ *Status*   : Not Available',
+    `✦ *Type*     : ${termName} Past Papers`,
+    `✦ *Subject*  : ${subject}`,
     '',
-    'Ã¢â€Æ’ Papers halay upload nahi hoye, paaji.',
-    'Ã¢â€Æ’ Thora sabar karo, jaldi add ho jaye ge.',
-    'Ã¢â€â€”Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€â€º',
+    'Past papers abhi Drive mein upload nahi hoye.',
+    'Jaldi add ho jaye ge, thora sabar karo.',
+    '',
+    '╰────────────────────╯',
     studentGroupFooter().trimStart(),
   ].join('\n');
 }
 
 function missingHandoutText(subject) {
   return [
-    'â”â”â”ã€” *EDDY File Status* ã€•â”â”â”“',
+    '╭─── *FILE STATUS* ───╮',
     '',
-    'â³ *Status:* Not Available',
-    'ðŸ“š *Type:* Handouts',
-    `ðŸŽ¯ *Subject:* ${subject}`,
+    '✦ *Status*   : Not Available',
+    '✦ *Type*     : Handouts',
+    `✦ *Subject*  : ${subject}`,
     '',
-    'â”ƒ Handouts halay upload nahi hoye, paaji.',
-    'â”ƒ Thora sabar karo, jaldi add ho jaye ge.',
-    'â”—â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”›',
+    'Handouts abhi Drive mein upload nahi hoye.',
+    'Jaldi add ho jaye ge, thora sabar karo.',
+    '',
+    '╰────────────────────╯',
     studentGroupFooter().trimStart(),
   ].join('\n');
 }
@@ -212,15 +206,16 @@ function missingHandoutText(subject) {
 function buildTotalSentMessage({ sentCount, label, subject, doneLine = 'Files pohanch gayi ne, paaji.' }) {
   const deliveryLine = doneLine;
   return [
-    'â”â”â”ã€” *EDDY Delivery Report* ã€•â”â”â”“',
+    '╭── *DELIVERY REPORT* ──╮',
     '',
-    `âœ… *Status:* Done`,
-    `ðŸ“š *Type:* ${label}`,
-    `ðŸŽ¯ *Subject:* ${subject}`,
-    `ðŸ“¦ *Total Sent:* ${sentCount}`,
+    '✦ *Status*     : Delivered',
+    `✦ *Type*       : ${label}`,
+    `✦ *Subject*    : ${subject}`,
+    `✦ *Total Sent* : ${sentCount}`,
     '',
-    `\u2503 ${deliveryLine}`,
-    'â”—â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”›',
+    deliveryLine,
+    '',
+    '╰──────────────────────╯',
     studentGroupFooter().trimStart(),
   ].join('\n');
 }
@@ -228,15 +223,16 @@ function buildTotalSentMessage({ sentCount, label, subject, doneLine = 'Files po
 function missingPaperStatusText(subject, termType) {
   const termName = termType === 'mid' ? 'Mid Term' : 'Final Term';
   return [
-    'â”â”â”ã€” *EDDY File Status* ã€•â”â”â”“',
+    '╭─── *FILE STATUS* ───╮',
     '',
-    'â³ *Status:* Not Available',
-    `ðŸ“š *Type:* ${termName} Past Papers`,
-    `ðŸŽ¯ *Subject:* ${subject}`,
+    '✦ *Status*   : Not Available',
+    `✦ *Type*     : ${termName} Past Papers`,
+    `✦ *Subject*  : ${subject}`,
     '',
-    'â”ƒ Past papers halay upload nahi hoye, paaji.',
-    'â”ƒ Thora sabar karo, jaldi add ho jaye ge.',
-    'â”—â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”›',
+    'Past papers abhi Drive mein upload nahi hoye.',
+    'Jaldi add ho jaye ge, thora sabar karo.',
+    '',
+    '╰────────────────────╯',
     studentGroupFooter().trimStart(),
   ].join('\n');
 }
@@ -246,7 +242,7 @@ async function sendDriveFile(sock, jid, file, caption, quotedMsg) {
     document: { url: driveDownloadUrl(file.id) },
     mimetype: file.mimeType || 'application/octet-stream',
     fileName: file.name || 'drive-file',
-    caption: withPoweredCaption(caption),
+    caption: cleanDriveCaption(caption),
   }, quotedMsg ? { quoted: quotedMsg } : undefined);
 }
 

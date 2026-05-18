@@ -10,12 +10,28 @@ const { toSmallCaps } = require('../utils/fonts');
 const db = require('../database/db'); // Database import for settings check
 
 function cleanGroupRules(desc = '') {
+  const hasLink = (line) => /(?:https?:\/\/|chat\.whatsapp\.com\/|wa\.me\/)\S+/i.test(line);
+  const isLinkHeading = (line) => {
+    const normalized = String(line || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+
+    return [
+      /^links?$/,
+      /^links?\s*(here|below)?$/,
+      /^(this\s+)?groups?\s+links?$/,
+      /^(this\s+)?whatsapp\s+groups?\s+links?$/,
+      /^(invite|joining|join|chat)\s+links?$/,
+      /^(official|important|useful)\s+links?$/,
+    ].some((pattern) => pattern.test(normalized));
+  };
+
   return String(desc || '')
-    .replace(/https?:\/\/\S+/gi, '')
-    .replace(/chat\.whatsapp\.com\/\S+/gi, '')
-    .replace(/wa\.me\/\S+/gi, '')
     .split('\n')
     .map((line) => line.trim())
+    .filter((line) => line && !hasLink(line) && !isLinkHeading(line))
+    .map((line) => line.replace(/(?:https?:\/\/|chat\.whatsapp\.com\/|wa\.me\/)\S+/gi, '').trim())
     .filter(Boolean)
     .join('\n')
     .trim();

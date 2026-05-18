@@ -1,5 +1,5 @@
 // ============================================
-//    Prince Md — HANDLERS/CALLHANDLER.JS
+//    Prince Md - HANDLERS/CALLHANDLER.JS
 //    Incoming Call Handler
 // ============================================
 
@@ -19,23 +19,18 @@ const handleCall = async (sock, calls, botNum) => {
   for (const call of calls) {
     try {
       const callerId = call.from;
-      const callId   = call.id;
-      const isVideo  = call.isVideo;
+      const callId = call.id;
+      const isVideo = call.isVideo;
 
       logger.info(`Incoming ${isVideo ? 'video' : 'audio'} call from ${callerId}`);
 
-      // ─── Reject call if enabled ──────────────
       if (config.behavior.rejectCalls) {
         await sock.rejectCall(callId, callerId);
 
-        // Notify caller
         await sock.sendMessage(callerId, {
-          text:
-`📵 *Call Rejected!*
-
-${toSmallCaps('Prince Md')} does not accept calls.
+          text: `*Call Rejected!*\n\n${toSmallCaps('Prince Md')} does not accept calls.\nPlease send a message instead.`,
+        });
       }
-
     } catch (err) {
       logger.error('Call handler error:', err.message);
     }
