@@ -5,12 +5,12 @@
 
 'use strict';
 
-const axios  = require('axios');
 const path   = require('path');
 const fs     = require('fs');
 const db     = require('../database/db');
 const { toSmallCaps } = require('../utils/fonts');
 const { authMiddleware } = require('../middleware/auth');
+const { askAi } = require('../utils/aiProvider');
 
 // Bot names â€” whatsapp.js se set hoga
 const botNames = new Map();
@@ -22,9 +22,6 @@ const pendingSetup = new Map();
 
 // Chatbot config â€” naam aur topic store
 const chatbotConfig = new Map();
-
-const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
-const GROQ_URL     = 'https://api.groq.com/openai/v1/chat/completions';
 
 const getSystemPrompt = (botName, topic) =>
 `Tumhara naam "${botName}" hai.
@@ -62,46 +59,13 @@ const groqReply = async (userMessage, botName, topic) => {
   const systemPrompt = getSystemPrompt(botName, topic);
 
   try {
-    const res = await axios.post(GROQ_URL, {
-      model: 'llama-3.1-8b-instant',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user',   content: userMessage  }
-      ],
-      max_tokens: 200,
-      temperature: 0.7,
-    }, {
-      headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-        'Content-Type':  'application/json',
-      },
-      timeout: 15000,
+    const reply = await askAi(userMessage, {
+      systemPrompt,
+      endpoint: 'chatgpt',
     });
-    const reply = res.data?.choices?.[0]?.message?.content?.trim();
     if (reply) return reply;
   } catch (e) {
-    console.log('[CHATBOT] Model 1 failed:', e.message);
-  }
-
-  try {
-    const res = await axios.post(GROQ_URL, {
-      model: 'gemma2-9b-it',
-      messages: [
-        { role: 'user', content: systemPrompt + '\n\nUser: ' + userMessage }
-      ],
-      max_tokens: 200,
-      temperature: 0.7,
-    }, {
-      headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-        'Content-Type':  'application/json',
-      },
-      timeout: 15000,
-    });
-    const reply = res.data?.choices?.[0]?.message?.content?.trim();
-    if (reply) return reply;
-  } catch (e) {
-    console.log('[CHATBOT] Model 2 failed:', e.message);
+    console.log('[CHATBOT] Universal AI failed:', e.message);
   }
 
   const fallbacks = [

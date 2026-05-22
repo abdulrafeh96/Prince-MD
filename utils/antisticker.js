@@ -28,10 +28,10 @@ async function warnUser(sock, from, sender, cleanBot) {
   await sock.sendMessage(from, {
     text: `┏━━〔 *Anti-Sticker Alert* 〕━━┓
 
-@${displayNumber(sender)} paaji, stickeran di baraat ethe allowed nahi.
-Thora keyboard vi use kar lya karo.
+@${displayNumber(sender)}, stickers are not allowed in this group.
+Please send a text message instead.
 
-*Warning Meter:* ${warns}/${MAX_WARNS}
+*Warnings:* ${warns}/${MAX_WARNS}
 ┗━━━━━━━━━━━━━━━━┛`,
     mentions: [sender],
   });
@@ -41,7 +41,7 @@ Thora keyboard vi use kar lya karo.
     await sock.sendMessage(from, {
       text: `┏━━〔 *Member Removed* 〕━━┓
 
-@${displayNumber(sender)} stickeran de nach ch group ton bahar ho gaye.
+@${displayNumber(sender)} has been removed for repeatedly sending stickers.
 *Warnings:* ${MAX_WARNS}/${MAX_WARNS}
 
 ┗━━━━━━━━━━━━━━┛`,

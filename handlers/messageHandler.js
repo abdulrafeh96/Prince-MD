@@ -263,7 +263,7 @@ const handleMessage = async (sock, m, botNum) => {
   if (!body.startsWith(config.prefix)) {
     // 🎯 Check for ViewOnce auto-reply
     if (type === 'viewOnceMessageV2' || type === 'viewOnceMessage' || type === 'ephemeralMessage') {
-      const ctx = { sock, msg, from, sender, isGroup, body, text: body };
+      const ctx = { sock, msg, from, sender, isGroup, body, text: body, botNum };
       await handleViewOnceAutoReply(ctx).catch(() => {});
       return;
     }

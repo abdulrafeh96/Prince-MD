@@ -5,67 +5,18 @@
 
 'use strict';
 
-const axios = require('axios');
 const { toSmallCaps } = require('../utils/fonts');
 const logger = require('../utils/logger');
+const { askAi } = require('../utils/aiProvider');
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-
-const askGroq = async (query, mode) => {
+const askUniversalAi = (query, mode) => {
   const systemPrompt = mode === 'cursorai'
-    ? 'You are Cursor AI assistant, an expert coding assistant. Provide practical, concise coding help with: 1) Clear code examples, 2) Step-by-step explanations, 3) Best practices, 4) Common pitfalls to avoid. Focus on JavaScript, Python, and web development. Keep responses under 300 words.'
-    : 'You are WormGPT style assistant. Reply directly and clearly to user prompts.';
-
-  const res = await axios.post(GROQ_URL, {
-    model: 'llama-3.3-70b-versatile',
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: query }
-    ],
-    temperature: 0.7,
-    max_tokens: 700
-  }, {
-    headers: {
-      Authorization: `Bearer ${GROQ_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    timeout: 30000
+    ? 'You are Cursor AI assistant, an expert coding assistant. Provide practical, concise coding help.'
+    : 'Reply directly and clearly to the user prompt.';
+  return askAi(query, {
+    systemPrompt,
+    endpoint: mode === 'cursorai' ? 'cursorai' : 'wormgpt',
   });
-
-  return res.data?.choices?.[0]?.message?.content?.trim() || '';
-};
-
-const askLegacyWormApi = async (query) => {
-  // Try the free ChatGPT API first
-  try {
-    const res = await axios.post(
-      'https://chatgpt-api.shn.hk/v1/',
-      {
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: query }]
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-        timeout: 30000
-      }
-    );
-    return res.data?.choices?.[0]?.message?.content?.trim() || '';
-  } catch (e) {
-    // Fallback to old API
-    const res = await axios.get(
-      `https://apiskeith.top/ai/wormgpt?q=${encodeURIComponent(query)}`,
-      { timeout: 30000 }
-    );
-    return (
-      res.data?.result ||
-      res.data?.response ||
-      res.data?.answer ||
-      res.data?.text ||
-      res.data?.message ||
-      (typeof res.data === 'string' ? res.data : '')
-    );
-  }
 };
 
 const runAi = async (ctx, mode = 'wormgpt') => {
@@ -87,16 +38,7 @@ const runAi = async (ctx, mode = 'wormgpt') => {
   await react('ðŸ¤–');
 
   try {
-    let reply = '';
-    try {
-      reply = await askGroq(query, mode);
-    } catch (e) {
-      if (mode === 'wormgpt') {
-        reply = await askLegacyWormApi(query);
-      } else {
-        throw e;
-      }
-    }
+    const reply = await askUniversalAi(query, mode);
 
     if (!reply) {
       await react('âŒ');

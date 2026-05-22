@@ -4,15 +4,23 @@ const db = require('../database/db');
 const logger = require('./logger');
 
 const MAX_WARNS = 3;
-const SPAM_LIMIT = 5;
-const SPAM_WINDOW_MS = 8000;
+const SPAM_LIMIT = 4;
+const SPAM_WINDOW_MS = 7000;
 const COOLDOWN_MS = 15000;
+const REOPEN_DELAY_MS = 2 * 60 * 1000;
 
 const spamBuckets = new Map();
 const lastActionAt = new Map();
+const reopenTimers = new Map();
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const displayNumber = (jid = '') => String(jid).split('@')[0].split(':')[0];
+
+async function sendText(sock, from, text, extra = {}) {
+  const cleanText = String(text || '').trim();
+  if (!cleanText) return;
+  await sock.sendMessage(from, { text: cleanText, ...extra });
+}
 
 function bucketKey(from, sender, cleanBot) {
   return `${cleanBot}:${from}:${sender}`;
@@ -26,7 +34,7 @@ function rememberMessage(key, now) {
 }
 
 async function deleteMessage(sock, from, msg, sender) {
-  await sleep(250);
+  await sleep(100);
   await sock.sendMessage(from, {
     delete: {
       remoteJid: from,
@@ -37,62 +45,76 @@ async function deleteMessage(sock, from, msg, sender) {
   });
 }
 
+function scheduleReopen(sock, from, cleanBot) {
+  const existing = reopenTimers.get(from);
+  if (existing) clearTimeout(existing);
+
+  const timer = setTimeout(async () => {
+    reopenTimers.delete(from);
+    try {
+      await sock.groupSettingUpdate(from, 'not_announcement');
+      db.setMute(from, false, cleanBot);
+      await sendText(sock, from, 'Group opened again after the anti-spam lock.');
+    } catch (err) {
+      logger.error('Anti-spam group reopen error:', err?.message || err);
+    }
+  }, REOPEN_DELAY_MS);
+
+  if (typeof timer.unref === 'function') timer.unref();
+  reopenTimers.set(from, timer);
+}
+
+async function closeGroup(sock, from, cleanBot) {
+  try {
+    const alreadyLocked = reopenTimers.has(from);
+    if (!alreadyLocked) {
+      await sock.groupSettingUpdate(from, 'announcement');
+      db.setMute(from, true, cleanBot);
+    }
+    scheduleReopen(sock, from, cleanBot);
+  } catch (err) {
+    logger.error('Anti-spam group close error:', err?.message || err);
+  }
+}
+
 async function warnUser(sock, from, sender, cleanBot) {
   const warnKey = `${from}:${sender}`;
   const warns = db.addWarn(warnKey, cleanBot);
 
-  await sock.sendMessage(from, {
-    text: `┏━━〔 *Anti-Spam Alert* 〕━━┓
+  await sendText(sock, from, `Anti-Spam Alert
 
-@${displayNumber(sender)} paaji, thora brake lao.
-Messagean di train express speed te chal pai ae.
+@${displayNumber(sender)}, you are sending messages too quickly.
+The group has been closed for 2 minutes and your spam message has been removed.
 
-*Warning Meter:* ${warns}/${MAX_WARNS}
-┗━━━━━━━━━━━━━━┛`,
-    mentions: [sender],
-  });
+Warnings: ${warns}/${MAX_WARNS}`, { mentions: [sender] });
 
   if (warns >= MAX_WARNS) {
     await sock.groupParticipantsUpdate(from, [sender], 'remove');
-    await sock.sendMessage(from, {
-      text: `┏━━〔 *Member Removed* 〕━━┓
+    await sendText(sock, from, `Member Removed
 
-@${displayNumber(sender)} spam di race ch group ton bahar ho gaye.
-*Warnings:* ${MAX_WARNS}/${MAX_WARNS}
-
-┗━━━━━━━━━━━━━━┛`,
-      mentions: [sender],
-    });
+@${displayNumber(sender)} has been removed for repeated spam.
+Warnings: ${MAX_WARNS}/${MAX_WARNS}`, { mentions: [sender] });
   }
 }
 
 async function applyAction(sock, msg, from, sender, cleanBot, action) {
-  if (action === 'warn') {
-    await warnUser(sock, from, sender, cleanBot);
-    return;
-  }
+  await closeGroup(sock, from, cleanBot);
+  await deleteMessage(sock, from, msg, sender);
 
-  if (action === 'warndelete') {
-    await deleteMessage(sock, from, msg, sender);
+  if (action === 'warn' || action === 'warndelete') {
     await warnUser(sock, from, sender, cleanBot);
     return;
   }
 
   if (action === 'kick') {
-    await deleteMessage(sock, from, msg, sender);
     await sock.groupParticipantsUpdate(from, [sender], 'remove');
-    await sock.sendMessage(from, {
-      text: `┏━━〔 *Member Removed* 〕━━┓
+    await sendText(sock, from, `Member Removed
 
-@${displayNumber(sender)} spam machine ban gaye si, is karke bahar kar ditta.
-
-┗━━━━━━━━━━━━━━┛`,
-      mentions: [sender],
-    });
+@${displayNumber(sender)} has been removed for spamming.`, { mentions: [sender] });
     return;
   }
 
-  await deleteMessage(sock, from, msg, sender);
+  await sendText(sock, from, 'Anti-Spam Alert\n\nGroup has been closed for 2 minutes and the spam message has been removed.');
 }
 
 async function checkAntiSpam(sock, msg, from, sender, botNum, isProtected) {
@@ -113,13 +135,11 @@ async function checkAntiSpam(sock, msg, from, sender, botNum, isProtected) {
   spamBuckets.set(key, []);
 
   const action = db.getAntiSpamAction(from, cleanBot);
-  setTimeout(async () => {
-    try {
-      await applyAction(sock, msg, from, msg.key.participant || sender, cleanBot, action);
-    } catch (err) {
-      logger.error('Anti-spam action error:', err?.message || err);
-    }
-  }, 100);
+  try {
+    await applyAction(sock, msg, from, msg.key.participant || sender, cleanBot, action);
+  } catch (err) {
+    logger.error('Anti-spam action error:', err?.message || err);
+  }
 
   return true;
 }

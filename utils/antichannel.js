@@ -61,10 +61,10 @@ async function warnUser(sock, from, sender, cleanBot) {
   await sock.sendMessage(from, {
     text: `┏━━〔 *Anti-Channel Alert* 〕━━┓
 
-@${displayNumber(sender)} paaji, channel forward ethe na pao.
-Eh group ae, TV da cable network nahi.
+@${displayNumber(sender)}, channel forwards are not allowed in this group.
+Your message has been removed.
 
-*Warning Meter:* ${warns}/${MAX_WARNS}
+*Warnings:* ${warns}/${MAX_WARNS}
 ┗━━━━━━━━━━━━━━━━┛`,
     mentions: [sender],
   });
@@ -74,7 +74,7 @@ Eh group ae, TV da cable network nahi.
     await sock.sendMessage(from, {
       text: `┏━━〔 *Member Removed* 〕━━┓
 
-@${displayNumber(sender)} channel badalde badalde group ton hi bahar ho gaye.
+@${displayNumber(sender)} has been removed for repeatedly sending channel forwards.
 *Warnings:* ${MAX_WARNS}/${MAX_WARNS}
 
 ┗━━━━━━━━━━━━━━┛`,
@@ -84,14 +84,14 @@ Eh group ae, TV da cable network nahi.
   return;
 
   await sock.sendMessage(from, {
-    text: `📺 *Channel Remote Confiscated!*\n\n@${displayNumber(sender)}, WhatsApp channel links/forwards yahan allowed nahi hain.\nGroup chat hai, TV broadcast room nahi.\n\n⚠️ *Warnings:* ${warns}/${MAX_WARNS}`,
+    text: `📺 *Anti-Channel Warning*\n\n@${displayNumber(sender)}, WhatsApp channel links/forwards are not allowed in this group.\n\n⚠️ *Warnings:* ${warns}/${MAX_WARNS}`,
     mentions: [sender],
   });
 
   if (warns >= MAX_WARNS) {
     await sock.groupParticipantsUpdate(from, [sender], 'remove');
     await sock.sendMessage(from, {
-      text: `🚫 @${displayNumber(sender)} channel switching zyada ho gayi. ${MAX_WARNS}/${MAX_WARNS} warnings complete, ab break time.`,
+      text: `🚫 @${displayNumber(sender)} has been removed after reaching ${MAX_WARNS}/${MAX_WARNS} warnings.`,
       mentions: [sender],
     });
   }

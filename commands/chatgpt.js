@@ -5,8 +5,8 @@
 
 'use strict';
 
-const axios = require('axios');
 const { toSmallCaps } = require('../utils/fonts');
+const { askAi } = require('../utils/aiProvider');
 
 // ─── .chatgpt ────────────────────────────────────────────
 const chatgpt = async (ctx) => {
@@ -20,25 +20,7 @@ const chatgpt = async (ctx) => {
   await ctx.reply(`🤖 *${toSmallCaps('thinking with ChatGPT')}*...`);
 
   try {
-    // Using OpenAI API (you'll need to add your API key)
-    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'user',
-          content: query
-        }
-      ],
-      max_tokens: 1000,
-      temperature: 0.7
-    }, {
-      headers: {
-        'Authorization': 'Bearer YOUR_OPENAI_API_KEY', // Replace with your API key
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const answer = response.data.choices[0].message.content;
+    const answer = await askAi(query, { endpoint: 'chatgpt' });
 
     let responseText = `🤖 *${toSmallCaps('ChatGPT Response')}*\n\n`;
     responseText += `📝 *${toSmallCaps('question')}:* ${query}\n\n`;
@@ -50,8 +32,7 @@ const chatgpt = async (ctx) => {
   } catch (error) {
     console.log('[CHATGPT ERROR]', error.message);
     
-    // Fallback response if API fails
-    const fallbackResponse = `I'm sorry, I'm having trouble connecting to ChatGPT right now. Please try again later or check if the API key is properly configured.`;
+    const fallbackResponse = `I'm sorry, the AI service is not responding right now. Please try again later.`;
     
     let responseText = `🤖 *${toSmallCaps('ChatGPT Response')}*\n\n`;
     responseText += `📝 *${toSmallCaps('question')}:* ${query}\n\n`;

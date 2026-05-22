@@ -1,6 +1,6 @@
 'use strict';
 
-const axios = require('axios');
+const { askAi } = require('../utils/aiProvider');
 
 const runAiProvider = async (ctx, providerName, endpoint) => {
   const { args, reply, react } = ctx;
@@ -10,18 +10,7 @@ const runAiProvider = async (ctx, providerName, endpoint) => {
   await react('🤖');
 
   try {
-    const res = await axios.get(`https://apiskeith.top/ai/${endpoint}`, {
-      params: { q: query },
-      timeout: 20000,
-    });
-
-    const data = res.data || {};
-    const output = data.result || data.answer || data.text || data.response || data.reply;
-
-    if (!output) {
-      throw new Error('No response from provider');
-    }
-
+    const output = await askAi(query, { endpoint });
     return reply(`🤖 *${providerName.toUpperCase()} Response*\n\n${output}`);
   } catch (err) {
     console.log(`[AIEXTRAS ${providerName.toUpperCase()} ERROR]`, err.message || err);

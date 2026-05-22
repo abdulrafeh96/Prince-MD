@@ -1,31 +1,21 @@
 'use strict';
-const axios = require('axios');
+
+const { askAi } = require('../utils/aiProvider');
 
 const claude = async (ctx) => {
   const { args, reply, react } = ctx;
-
   const query = args.join(' ').trim();
-  if (!query) return reply('❌ Kuch likho!\nExample: `.claude hello`');
+  if (!query) return reply('❌ Please provide a prompt.\nExample: `.claude hello`');
 
   await react('🤖');
 
   try {
-    const res = await axios.get('https://apiskeith.top/ai/claudeai', {
-      params: { q: query },
-      timeout: 20000,
-    });
-
-    const data = res.data;
-    if (!data.status || !data.result) {
-      return reply('❌ Koi response nahi mila. Dobara try karo.');
-    }
-
+    const output = await askAi(query, { endpoint: 'claudeai' });
     await react('✅');
-    await reply(data.result);
-
+    await reply(output);
   } catch (err) {
     await react('❌');
-    await reply(`❌ Error: ${err.message}`);
+    await reply(`❌ Claude is not available right now. Please try again later.`);
   }
 };
 

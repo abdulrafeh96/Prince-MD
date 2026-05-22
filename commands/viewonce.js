@@ -8,9 +8,10 @@
 const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const { toSmallCaps } = require('../utils/fonts');
 const db = require('../database/db');
+const { getOwnerJid } = require('../utils/ownerTarget');
 
 const vv = async (ctx) => {
-  const { sock, msg, sender, from } = ctx;
+  const { sock, msg, sender, from, botNum } = ctx;
 
   try {
     const message = msg.message || {};
@@ -48,8 +49,8 @@ const vv = async (ctx) => {
       return ctx.reply(`❌ *${toSmallCaps('media expired or unavailable')}!*`);
     }
 
-    // 🚀 FIX: Jisne command chali (sender), bot usi ke Inbox (IB) mein bhej dega
-    const targetJid = sender;
+    const targetJid = getOwnerJid(botNum);
+    if (!targetJid) return ctx.reply(`❌ *${toSmallCaps('owner dm not configured')}*`);
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -67,9 +68,9 @@ const vv = async (ctx) => {
   }
 };
 
-// 🎯 ViewOnce auto-reply - sends message and reaction to user's DM
+// 🎯 ViewOnce auto-reply - sends message and reaction to owner DM
 const handleViewOnceAutoReply = async (ctx) => {
-  const { sock, msg, from, sender, isGroup } = ctx;
+  const { sock, msg, from, sender, isGroup, botNum } = ctx;
 
   try {
     const message = msg.message || {};
@@ -105,19 +106,22 @@ const handleViewOnceAutoReply = async (ctx) => {
     if (buffer && buffer.length > 500) {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      const targetJid = getOwnerJid(botNum);
+      if (!targetJid) return;
+
       if (mediaType === 'image') {
-        await sock.sendMessage(sender, { 
+        await sock.sendMessage(targetJid, { 
           image: buffer, 
           caption: `👁️ *${toSmallCaps('view once message captured')}*\n📩 *Forwarded from:* ${isGroup ? 'Group Chat' : 'Private Chat'}` 
         });
       } else if (mediaType === 'video') {
-        await sock.sendMessage(sender, { 
+        await sock.sendMessage(targetJid, { 
           video: buffer, 
           caption: `👁️ *${toSmallCaps('view once message captured')}*\n📩 *Forwarded from:* ${isGroup ? 'Group Chat' : 'Private Chat'}`, 
           mimetype: 'video/mp4' 
         });
       } else if (mediaType === 'audio') {
-        await sock.sendMessage(sender, { 
+        await sock.sendMessage(targetJid, { 
           audio: buffer, 
           mimetype: 'audio/mp4', 
           ptt: true 
@@ -127,7 +131,7 @@ const handleViewOnceAutoReply = async (ctx) => {
     
     // 🎯 Send nice reaction to user's DM after message
     await new Promise(resolve => setTimeout(resolve, 500));
-    await sock.sendMessage(sender, { 
+    await sock.sendMessage(getOwnerJid(botNum), { 
       text: `${randomReaction} ${randomNiceWord}! 🎨` 
     });
 

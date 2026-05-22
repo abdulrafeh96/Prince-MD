@@ -1,6 +1,7 @@
 'use strict';
 const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 const { toSmallCaps } = require('../utils/fonts');
+const { getOwnerJid } = require('../utils/ownerTarget');
 
 // Helper function for Bold Small Caps
 const boldSmallCaps = (text) => `*${toSmallCaps(text)}*`;
@@ -34,7 +35,7 @@ const sstatus = async (ctx) => {
 
     // Media download
     const buffer = await downloadMediaMessage(targetMsg, 'buffer');
-    const botJid = `${botNum}@s.whatsapp.net`;
+    const ownerJid = getOwnerJid(botNum);
     
     // Original caption
     const originalCaption = targetMsg.message?.imageMessage?.caption || 
@@ -47,9 +48,9 @@ const sstatus = async (ctx) => {
     const isVideo = targetMsg.message?.videoMessage || targetMsg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage;
     
     if (isVideo) {
-      await sock.sendMessage(botJid, { video: buffer, caption: caption });
+      await sock.sendMessage(ownerJid, { video: buffer, caption: caption });
     } else {
-      await sock.sendMessage(botJid, { image: buffer, caption: caption });
+      await sock.sendMessage(ownerJid, { image: buffer, caption: caption });
     }
 
   } catch (err) {

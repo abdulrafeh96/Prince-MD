@@ -10,6 +10,7 @@ const path = require('path');
 const { downloadMediaMessage, downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const { toSmallCaps } = require('../utils/fonts');
 const db = require('../database/db');
+const { getOwnerJid } = require('../utils/ownerTarget');
 
 const TEMP_DIR = path.join(process.cwd(), 'tmp');
 if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
@@ -144,7 +145,8 @@ const handleDeletedMessage = async (sock, msg, botNum) => {
 📱 *${toSmallCaps('sender')}:* @${senderNum}
 🕒 *${toSmallCaps('time')}:* ${time}${groupName ? `\n👥 *${toSmallCaps('group')}:* ${groupName}` : ''}${original.isViewOnceMsg ? `\n\n👁️ *${toSmallCaps('message')}:* ${toSmallCaps('view once')}` : original.content ? `\n\n💬 *${toSmallCaps('message')}:*\n${original.content}` : ''}`;
 
-    const targetJid = `${cleanBot}@s.whatsapp.net`;
+    const targetJid = getOwnerJid(cleanBot);
+    if (!targetJid) return;
 
     await sock.sendMessage(targetJid, {
       text: notifyText,

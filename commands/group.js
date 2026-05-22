@@ -579,7 +579,7 @@ const antispam = async (ctx) => {
     await ctx.reply(`┏━━〔 *Anti-Spam System* 〕━━┓
 
 *Status:* ${value ? 'Enabled' : 'Disabled'}
-Spam di train hun ${value ? 'station te rok ditti' : 'free track te chali gayi'}.
+Anti-spam is now ${value ? 'active and monitoring fast messages' : 'disabled for this group'}.
 
 ┗━━━━━━━━━━━━━━┛`);
     await react('✅');

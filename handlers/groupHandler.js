@@ -6,36 +6,7 @@
 'use strict';
 
 const logger = require('../utils/logger');
-const { toSmallCaps } = require('../utils/fonts');
 const db = require('../database/db'); // Database import for settings check
-
-function cleanGroupRules(desc = '') {
-  const hasLink = (line) => /(?:https?:\/\/|chat\.whatsapp\.com\/|wa\.me\/)\S+/i.test(line);
-  const isLinkHeading = (line) => {
-    const normalized = String(line || '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, ' ')
-      .trim();
-
-    return [
-      /^links?$/,
-      /^links?\s*(here|below)?$/,
-      /^(this\s+)?groups?\s+links?$/,
-      /^(this\s+)?whatsapp\s+groups?\s+links?$/,
-      /^(invite|joining|join|chat)\s+links?$/,
-      /^(official|important|useful)\s+links?$/,
-    ].some((pattern) => pattern.test(normalized));
-  };
-
-  return String(desc || '')
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line && !hasLink(line) && !isLinkHeading(line))
-    .map((line) => line.replace(/(?:https?:\/\/|chat\.whatsapp\.com\/|wa\.me\/)\S+/gi, '').trim())
-    .filter(Boolean)
-    .join('\n')
-    .trim();
-}
 
 /**
  * Handle group metadata updates
@@ -70,8 +41,6 @@ const handleGroupParticipants = async (sock, update, botNum) => {
   try {
     const groupMeta = await sock.groupMetadata(id).catch(() => null);
     const groupName = groupMeta?.subject || 'Group';
-    const groupRules = cleanGroupRules(groupMeta?.desc) || 'No rules set in group description.';
-
     for (const participant of participants) {
       const number = participant.split('@')[0];
       const by = author ? author.split('@')[0] : 'Unknown';
@@ -90,10 +59,13 @@ const handleGroupParticipants = async (sock, update, botNum) => {
 ┃ *Assalam-o-Alaikum* @${number}
 ┃
 ┃ *Welcome to ${groupName}*
+┃
+┃ This is a study group, so feel free to ask questions,
+┃ share useful notes, and learn together.
 ╰━━━━━━━━━━━━╯
 
-📌 *Group Rules*
-${groupRules}`;
+📚 *Study Reminder*
+Stay respectful, avoid spam, and keep the discussion helpful for everyone.`;
 
           await sock.sendMessage(id, {
             text: welcomeText,
